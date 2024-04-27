@@ -1,0 +1,149 @@
+name: AppCannon Landing Page
+description: Announce AppCannon to the world and get developers excited to try it out!
+
+pages:
+  - name: Home
+    path: /
+    sections:
+      - type: Hero
+        headline: Generate Full-Stack Web Apps in Seconds with AppCannon
+        subheading: From idea to deployed app in a single command - powered by AI
+        cta:
+          text: Try AppCannon Free
+          link: /signup
+        image: hero.png
+
+      - type: Benefits
+        benefits:
+          - title: 10x Faster Development
+            description: Go from idea to live app in seconds, not days or weeks
+            icon: rocket.svg
+          - title: No Boilerplate, Just Business Logic
+            description: Focus on your unique app features, not repetitive setup
+            icon: code.svg
+          - title: AI-Powered Code Generation
+            description: Leverage the power of LLMs to write high-quality, full-stack code
+            icon: ai.svg
+          - title: Seamless Deployment
+            description: One-click deploy to Vercel, Netlify, or your own infrastructure
+            icon: deploy.svg
+
+      - type: HowItWorks
+        steps:
+          - title: Define your app in a simple YAML spec
+            description: Specify your pages, components, models, and API in a human-friendly YAML file
+            image: yaml.png
+          - title: Run `appcannon generate` to create your full-stack app
+            description: AppCannon will generate a complete, working app based on your YAML spec
+            image: terminal.png
+          - title: Customize the generated code to fit your needs
+            description: The generated code is well-structured and documented, making it easy to extend and customize
+            image: code.png
+          - title: Deploy with a single command and share with the world!
+            description: AppCannon seamlessly integrates with popular hosting platforms for easy deployment
+            image: deploy.png
+
+      - type: UseCases
+        cases:
+          - title: Rapid Prototyping
+            description: Quickly test out new app ideas without investing tons of dev time
+            icon: prototype.svg
+          - title: MVPs and Side Projects
+            description: Build and launch small apps in record time
+            icon: rocket.svg
+          - title: Hackathons and Coding Challenges
+            description: Go from zero to impressive demo in hours
+            icon: trophy.svg
+          - title: Learning and Experimentation
+            description: Explore new stacks and architectures with ease
+            icon: experiment.svg
+
+      - type: Testimonials
+        testimonials:
+          - quote: AppCannon is a game-changer for web development. I built and launched my passion project in a weekend!
+            author: Jane D.
+            title: Indie Hacker
+          - quote: The code generation is top-notch - it follows best practices and is easy to customize. AppCannon is now an essential part of my toolkit.
+            author: John S.
+            title: Freelance Developer
+          - quote: I used to dread the tedious setup phase of new projects. With AppCannon, I can dive straight into implementing my unique features. It's a huge time-saver!
+            author: Sarah K.
+            title: Startup Founder
+
+      - type: CTA
+        headline: Ready to Revolutionize Your Web Development Workflow?
+        subheading: Sign up for AppCannon today and blast off your next project! 🚀
+        cta:
+          text: Get Started Free
+          link: /signup
+        secondary_cta: 
+          text: Star us on GitHub
+          link: https://github.com/appcannon
+
+  - name: Signup
+    path: /signup
+    sections:
+      - type: SignupForm
+        headline: Sign Up for AppCannon
+        subheading: Start generating apps in seconds!
+        fields:
+          - type: email
+            label: Email Address
+            required: true
+          - type: password
+            label: Password
+            required: true
+        submit_text: Create Account
+
+sections:
+  - name: Header
+    type: nav
+    logo: logo.svg
+    links:
+      - text: Features
+        url: '#features'
+      - text: Docs
+        url: /docs
+      - text: Pricing
+        url: /pricing
+      - text: Sign In
+        url: /login
+
+  - name: Footer
+    type: footer
+    logo: logo.svg
+    sections:
+      - name: Product
+        links:
+          - text: Features
+            url: '#features'
+          - text: Docs
+            url: /docs
+          - text: Pricing
+            url: /pricing
+          - text: Roadmap
+            url: /roadmap
+      - name: Company  
+        links:
+          - text: About
+            url: /about
+          - text: Blog
+            url: /blog
+          - text: Careers
+            url: /careers
+          - text: Contact
+            url: /contact
+      - name: Connect
+        links:
+          - text: GitHub
+            url: https://github.com/appcannon
+          - text: Twitter
+            url: https://twitter.com/appcannon
+          - text: Email
+            url: mailto:hello@appcannon.com
+    newsletter:
+      headline: Stay in the Loop
+      subheading: Get the latest AppCannon news and tips delivered straight to your inbox.
+      cta_text: Subscribe
+      cta_url: /newsletter
+    copyright: © 2024 AppCannon. All rights reserved.
