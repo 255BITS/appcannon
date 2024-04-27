@@ -66,4 +66,25 @@ Contributions are welcome! If you find any issues or have suggestions for improv
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+AppCannon is dual-licensed under both the MIT License and a Commercial License.
+
+### MIT License
+
+The MIT License is a permissive open-source license that allows you to freely use, modify, and distribute AppCannon for any purpose, subject to the terms and conditions of the license. Under this license, AppCannon is provided "as is" without warranty of any kind.
+
+See the [LICENSE-MIT](LICENSE-MIT) file for the full text of the MIT License.
+
+### Commercial License
+
+For users or organizations generating revenue over $10,000 per month or who have raised funding, we request that you purchase a Commercial License to support the ongoing development and maintenance of AppCannon.
+
+The Commercial License provides the following additional benefits:
+
+- Priority support and assistance from the AppCannon team
+- Custom feature development and integration services
+- Legal assurances and indemnification for the use of AppCannon
+- The ability to influence the project roadmap and prioritization
+
+To inquire about purchasing a Commercial License, please contact us at [martyn+sales@255bits.com](mailto:martyn+sales@255bits.com).
+
+We appreciate your support in keeping AppCannon a sustainable open-source project!
