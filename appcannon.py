@@ -1,10 +1,12 @@
 import argparse
 import anthropic
 import re
+import time
 import os
 import yaml
 import json
 from dataclasses import dataclass
+from random import randint
 
 @dataclass
 class AppSettings:
@@ -26,13 +28,31 @@ def parse_args():
     parser.add_argument('-backend', dest='backend', type=str, default="flask/python3", help='Backend to use')
     parser.add_argument('-database', dest='database', type=str, default="sqlite", help='Database to use')
     parser.add_argument('-git', dest='git', type=str, default="git@github.com:your-username/your-projectname.git", help='The target git repo')
-    parser.add_argument('-project', dest='project', type=str, default="appcannon", help='The organization, should correspond to the github namespace')
     return parser.parse_args()
 
 def read_spec_file(file_path):
     with open(file_path, 'r') as file:
         spec = yaml.safe_load(file)
     return spec
+
+def query_llm_with_retry(*args, max_retries=5, **kwargs):
+    base_delay = 1  # base delay in seconds
+    for attempt in range(max_retries):
+        try:
+            # Attempt the function call
+            return query_llm(*args, **kwargs)
+        except anthropic.InternalServerError as e:
+            if attempt < max_retries - 1:
+                # Calculate the delay with exponential backoff and add jitter
+                delay = base_delay * 2 ** attempt + randint(0, 1000) / 1000
+                print(f"Attempt {attempt + 1}/{max_retries} failed due to server overload: {e}. Retrying in {delay:.2f} seconds.")
+                time.sleep(delay)
+            else:
+                # Log the last failure after all retries have been exhausted
+                print(f"All {max_retries} attempts failed due to server overload. Last error: {e}")
+                raise
+        else:
+            break
 
 def query_llm(system, user, format="raw", startblock=None):
     client = anthropic.Anthropic()
@@ -97,7 +117,7 @@ In this project we are going to use:
 
 Your response should be markdown.
     """
-    generated = query_llm(system, user)
+    generated = query_llm_with_retry(system, user)
     return generated
 
 def generate_files(readme):
@@ -109,7 +129,7 @@ def generate_files(readme):
 
 Skip binary files, this should be a list of text, code or markup files. Do not include folder paths, just the files with their full path.
 """
-    generated = query_llm(system, user, format='json', startblock="```json")
+    generated = query_llm_with_retry(system, user, format='json', startblock="```json")
     print("Generating these files:", generated)
     return generated
 
@@ -123,7 +143,7 @@ def generate_file(settings, readme, file):
 
 Your response should be markdown with a "```" code block containing the file content. Make the file adhere to the specifications and write initial code that works.
 """
-    generated = query_llm(system, user, format='code', startblock="```")
+    generated = query_llm_with_retry(system, user, format='code', startblock="```")
     return generated
 
 def generate_app(settings):
