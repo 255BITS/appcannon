@@ -1,5 +1,6 @@
 import argparse
 import anthropic
+import openai
 import re
 import time
 import os
@@ -15,6 +16,7 @@ class AppSettings:
     database: str
     spec: dict
     git_repo: str
+    model: str
 
 @dataclass
 class GeneratedApp:
@@ -27,6 +29,7 @@ def parse_args():
     parser.add_argument('-frontend', dest='frontend', type=str, default="htmx with tailwind.css", help='The frontend framework to use')
     parser.add_argument('-backend', dest='backend', type=str, default="flask/python3", help='Backend to use')
     parser.add_argument('-database', dest='database', type=str, default="sqlite", help='Database to use')
+    parser.add_argument('-model', dest='model', type=str, default="claude-3-opus-20240229", help='AI model to use')
     parser.add_argument('-git', dest='git', type=str, default="git@github.com:your-username/your-projectname.git", help='The target git repo')
     return parser.parse_args()
 
@@ -54,41 +57,67 @@ def query_llm_with_retry(*args, max_retries=5, **kwargs):
         else:
             break
 
-def query_llm(system, user, format="raw", startblock=None):
-    client = anthropic.Anthropic()
-    messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": user
-                    }]
-            }
+def query_llm(system, user, format="raw", startblock=None, model = "claude-3-opus-20240229"):
+    if model.startswith("claud"):
+        client = anthropic.Anthropic()
+        messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": user
+                        }]
+                }
+            ]
+
+        message = client.messages.create(
+            model=model,
+            max_tokens=4096,
+            system=system,
+            messages=messages,
+        )
+        text = message.content[0].text
+        if startblock:
+            pattern = rf'{re.escape(startblock)}\s*(.*?)\s*```'
+            re_match = re.search(pattern, text, re.DOTALL)
+            if re_match:
+                content = re_match.group(1)
+                if format == "json":
+                    return json.loads(content)
+                else:
+                    return content
+            else:
+                raise LLMResponseInvalid()
+        if format == "raw":
+            return text
+    elif model.startswith("gpt-"):
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user}
         ]
 
-    model = "claude-3-opus-20240229"
-    message = client.messages.create(
-        model=model,
-        max_tokens=4096,
-        system=system,
-        messages=messages,
-    )
-    text = message.content[0].text
-    if startblock:
-        pattern = rf'{re.escape(startblock)}\s*(.*?)\s*```'
-        re_match = re.search(pattern, text, re.DOTALL)
-        if re_match:
-            content = re_match.group(1)
-            if format == "json":
-                return json.loads(content)
+        response = openai.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=4096,
+        )
+        text = response.choices[0].message.content
+        if startblock:
+            pattern = rf'{re.escape(startblock)}\s*(.*?)\s*```'
+            re_match = re.search(pattern, text, re.DOTALL)
+            if re_match:
+                content = re_match.group(1)
+                if format == "json":
+                    return json.loads(content)
+                else:
+                    return content
             else:
-                return content
-        else:
-            print("--", content)
-            raise LLMResponseInvalid()
-    if format == "raw":
-        return text
+                print("--", content)
+                raise LLMResponseInvalid()
+        if format == "raw":
+            return text
+
 
 def generate_readme(settings):
     print("Generating README.md")
@@ -117,10 +146,10 @@ In this project we are going to use:
 
 Your response should be markdown.
     """
-    generated = query_llm_with_retry(system, user)
+    generated = query_llm_with_retry(system, user, model=settings.model)
     return generated
 
-def generate_files(readme):
+def generate_files(settings, readme):
     system = f"""Given an unstructured README that lists files associated with a project, output the list of files in a format that fits a python `List[str]`. Your output should be in markdown with a "```json" block."""
     user = f"""Extract the files in this project:
 ```markdown
@@ -129,7 +158,7 @@ def generate_files(readme):
 
 Skip binary files, this should be a list of text, code or markup files. Do not include folder paths, just the files with their full path.
 """
-    generated = query_llm_with_retry(system, user, format='json', startblock="```json")
+    generated = query_llm_with_retry(system, user, format='json', startblock="```json", model=settings.model)
     print("Generating these files:", generated)
     return generated
 
@@ -143,12 +172,12 @@ def generate_file(settings, readme, file):
 
 Your response should be markdown with a "```" code block containing the file content. Make the file adhere to the specifications and write initial code that works.
 """
-    generated = query_llm_with_retry(system, user, format='code', startblock="```")
+    generated = query_llm_with_retry(system, user, format='code', startblock="```", model=settings.model)
     return generated
 
 def generate_app(settings):
     readme = generate_readme(settings)
-    generated_file_list = generate_files(readme)
+    generated_file_list = generate_files(settings, readme)
     files = { "README.md": readme }
     for file in generated_file_list:
         built = generate_file(settings, readme, file)
@@ -171,7 +200,7 @@ def save_generated_app(build_path, app):
 def main():
     args = parse_args()
     spec = read_spec_file(args.spec_file)
-    settings = AppSettings(frontend = args.frontend, backend = args.backend, database = args.database, spec = spec, git_repo = args.git)
+    settings = AppSettings(frontend = args.frontend, backend = args.backend, database = args.database, spec = spec, git_repo = args.git, model = args.model)
     generated_app = generate_app(settings)
     save_generated_app(args.build_path, generated_app)
 

@@ -23,8 +23,10 @@ AppCannon is a powerful tool that generates full-stack web applications from a s
    pip install -r requirements.txt
    ```
 
-3. Set up your Anthropic API key as an environment variable:
+3. Set up your API key as an environment variable:
    ```
+   export OPENAI_API_KEY=your_api_key_here
+   # or if using Claude
    export ANTHROPIC_API_KEY=your_api_key_here
    ```
 
@@ -45,6 +47,7 @@ Optional arguments:
 - `-database`: The database to use (default: "sqlite").
 - `-git`: The target Git repository for the generated app.
 - `-project`: The organization or project name (default: "appcannon").
+- `-model`: The model name (default: "gpt-4o").
 
 ## Example
 
@@ -58,6 +61,7 @@ This command will generate a todo app using React for the frontend, Node.js with
 
 ## Changelog
 
+* May 13 2024 - GPT4o support
 * Apr 27 2024 - Initial release
 
 ## Contributing
