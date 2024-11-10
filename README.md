@@ -10,6 +10,7 @@ AppCannon is a powerful tool that generates full-stack web applications from a s
 - 📊 Integrates with all databases
 - 📝 Creates a comprehensive README.md file for the generated app
 - 🗂️ Organizes the generated code into a clean project structure
+- ⚙️  Supports multiple models including claude-3-5-sonnet-2024-0620 and gpt-4o
 
 ## Installation
 
@@ -25,9 +26,9 @@ AppCannon is a powerful tool that generates full-stack web applications from a s
 
 3. Set up your API key as an environment variable:
    ```
-   export OPENAI_API_KEY=your_api_key_here
+   export OPENAI_API_KEY=your_openai_api_key_here
    # or if using Claude
-   export ANTHROPIC_API_KEY=your_api_key_here
+   export ANTHROPIC_API_KEY=your_anthropic_api_key_here
    ```
 
 ## Usage
@@ -42,25 +43,26 @@ python appcannon.py spec_file.yaml output_directory [options]
 - `output_directory`: The directory where the generated app files will be saved.
 
 Optional arguments:
-- `-frontend`: The frontend framework to use (default: "htmx with tailwind.css").
-- `-backend`: The backend framework to use (default: "flask/python3").
-- `-database`: The database to use (default: "sqlite").
-- `-git`: The target Git repository for the generated app.
-- `-project`: The organization or project name (default: "appcannon").
-- `-model`: The model name (default: "gpt-4o").
+- `-f` or `--frontend`: The frontend framework to use (default: "htmx with tailwind.css").
+- `-b` or `--backend`: The backend framework to use (default: "flask/python3").
+- `-d` or `--database`: The database to use (default: "sqlite").
+- `-g` or `--git`: The target Git repository for the generated app.
+- `-m` or `--model`: The model name to use for generation.
+- `-l` or `--log`: Optional. Specify a log file to record the generation process.
 
 ## Example
 
 Here's an example of how to use AppCannon:
 
 ```
-python appcannon.py examples/todo_app.yaml generated_apps/todo_app -frontend "react" -backend "node/express" -database "mongodb"
+python appcannon.py examples/todo_app.yaml generated_apps/todo_app -frontend "react" -backend "node/express" -database "mongodb" -model "claude-3-5-sonnet-20240620"
 ```
 
 This command will generate a todo app using React for the frontend, Node.js with Express for the backend, and MongoDB as the database. The generated app files will be saved in the `generated_apps/todo_app` directory.
 
 ## Changelog
 
+* Nov 9 2024 - Added CLI flags, support for Claude Sonnet 3.5 model
 * May 13 2024 - GPT4o support
 * Apr 27 2024 - Initial release
 
