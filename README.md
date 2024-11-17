@@ -14,17 +14,11 @@ AppCannon is a powerful tool that generates full-stack web applications from a s
 
 ## Installation
 
-1. Clone the AppCannon repository:
-   ```
-   git clone https://github.com/255BITS/appcannon.git
-   ```
-
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-3. Set up your API key as an environment variable:
+1. Install appcannon:
+```
+   pip install appcannon
+```
+2. Set up your API key as an environment variable:
    ```
    export OPENAI_API_KEY=your_openai_api_key_here
    # or if using Claude
