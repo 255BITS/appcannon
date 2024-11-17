@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument('-f', '--frontend', dest='frontend', type=str, default="htmx with tailwind.css", help='The frontend framework to use')
     parser.add_argument('-b', '--backend', dest='backend', type=str, default="flask/python3", help='Backend to use')
     parser.add_argument('-d', '--database', dest='database', type=str, default="sqlite", help='Database to use')
-    parser.add_argument('-m', '--model', dest='model', type=str, default="claude-3-5-sonnet-20240620", help='AI model to use')
+    parser.add_argument('-m', '--model', dest='model', type=str, default="claude-3-5-sonnet-20241022", help='AI model to use')
     parser.add_argument('-g', '--git', dest='git', type=str, default="git@github.com:your-username/your-projectname.git", help='The target git repo')
     parser.add_argument('-l', '--log', dest='log_file', type=str, default=None, help='Path to the generation log file')
     return parser.parse_args()

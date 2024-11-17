@@ -94,3 +94,5 @@ The Commercial License provides the following additional benefits:
 To inquire about purchasing a Commercial License, please contact us at [martyn+sales@255bits.com](mailto:martyn+sales@255bits.com).
 
 We appreciate your support in keeping AppCannon a sustainable open-source project!
+
+*Part of the [255labs.xyz](https://255labs.xyz) toolkit for AI-first development.*
