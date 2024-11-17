@@ -30,7 +30,7 @@ AppCannon is a powerful tool that generates full-stack web applications from a s
 To generate a web app using AppCannon, run the following command:
 
 ```
-python appcannon.py spec_file.yaml output_directory [options]
+appcannon spec_file.yaml output_directory [options]
 ```
 
 - `spec_file.yaml`: The path to the YAML specification file for your app.
@@ -49,7 +49,7 @@ Optional arguments:
 Here's an example of how to use AppCannon:
 
 ```
-python appcannon.py examples/todo_app.yaml generated_apps/todo_app -frontend "react" -backend "node/express" -database "mongodb" -model "claude-3-5-sonnet-20240620"
+appcannon examples/todo_app.yaml generated_apps/todo_app -frontend "react" -backend "node/express" -database "mongodb"
 ```
 
 This command will generate a todo app using React for the frontend, Node.js with Express for the backend, and MongoDB as the database. The generated app files will be saved in the `generated_apps/todo_app` directory.
