@@ -89,4 +89,8 @@ To inquire about purchasing a Commercial License, please contact us at [martyn+s
 
 We appreciate your support in keeping AppCannon a sustainable open-source project!
 
+## Acknowledgments
+
+This project uses [ai-agent-toolbox](https://github.com/255BITS/ai-agent-toolbox) for robust tool management and XML processing capabilities.
+
 *Part of the [255labs.xyz](https://255labs.xyz) toolkit for AI-first development.*
