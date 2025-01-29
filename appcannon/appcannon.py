@@ -8,6 +8,7 @@ import yaml
 import json
 from dataclasses import dataclass
 from random import randint
+from ai_agent_toolbox import Toolbox, XMLParser, XMLPromptFormatter
 
 class LLMResponseInvalid(Exception):
     """Exception raised when LLM response is invalid or cannot be parsed."""
@@ -47,17 +48,6 @@ def read_spec_file(file_path):
         spec = yaml.safe_load(file)
     return spec
 
-def extract_code_block(text):
-    """
-    Extracts the first code block from text.
-    """
-    pattern = r'```(?:[\w+-]*)\s*(.*?)\s*```'
-    match = re.search(pattern, text, re.DOTALL)
-    if match:
-        return match.group(1)
-    else:
-        return text  # Return full text if no code block is found
-
 def query_llm_with_retry(*args, max_retries=5, **kwargs):
     """
     Queries the LLM with retries on server errors.
@@ -75,25 +65,21 @@ def query_llm_with_retry(*args, max_retries=5, **kwargs):
                 print(f"All {max_retries} attempts failed. Last error: {e}")
                 raise
 
-def query_llm(system, user, format="raw", model="claude-3-opus-20240229"):
+def query_llm(system, user, model="claude-3-opus-20240229"):
     """
     Queries the specified LLM model with the given system and user prompts.
+    Returns raw response text.
     """
     if model.startswith("claude"):
         client = anthropic.Anthropic()
-        messages = [
-            {
-                "role": "user",
-                "content": user
-            }
-        ]
+        messages = [{"role": "user", "content": user}]
         response = client.messages.create(
             model=model,
             max_tokens=8192,
             messages=messages,
             system=system
         )
-        text = response.content[0].text
+        return response.content[0].text
     elif model.startswith("gpt-"):
         messages = [
             {"role": "system", "content": system},
@@ -104,27 +90,9 @@ def query_llm(system, user, format="raw", model="claude-3-opus-20240229"):
             messages=messages,
             max_tokens=4096,
         )
-        text = response.choices[0].message.content
+        return response.choices[0].message.content
     else:
         raise ValueError(f"Unsupported model: {model}")
-
-    if format == 'json':
-        try:
-            content = extract_code_block(text)
-            processed_content = json.loads(content)
-        except (json.JSONDecodeError, LLMResponseInvalid):
-            try:
-                processed_content = json.loads(text)
-            except json.JSONDecodeError as e:
-                raise LLMResponseInvalid(f"Failed to parse JSON: {e}")
-    elif format == 'code':
-        processed_content = extract_code_block(text)
-    elif format == 'raw':
-        processed_content = text
-    else:
-        raise ValueError(f"Unsupported format: {format}")
-
-    return processed_content, text  # Return both processed content and raw text
 
 def log_generation(log_file, file_name, response_text):
     """
@@ -145,106 +113,113 @@ def save_file(build_path, file_name, contents):
         f.write(contents)
     print(f"File written to {full_path}")
 
-def generate_readme(settings):
-    """
-    Generates and saves the README.md file based on the settings and specification.
-    """
-    print("Generating README.md")
-    system_prompt = (
-        "You are a skilled AI that specializes in web app creation."
-    )
-    user_prompt = (
-        "Generate a README for an application that matches this specification:\n"
-        f"<yaml webapp_specification=true>\n{yaml.dump(settings.spec)}\n</yaml>\n"
-        "Include the following sections:\n"
-        "* Introduction\n"
-        "* Usage\n"
-        "* Files\n"
-        "* Methods\n"
-        "* Models\n"
-        "* Available CSS styles\n"
-        "* Available JS functions\n"
-        "* Additional notes\n"
-        f"In this project we are going to use:\n"
-        f"* Frontend framework: {settings.frontend}\n"
-        f"* Backend framework: {settings.backend}\n"
-        f"* Database: {settings.database}\n"
-        f"* Git repo: {settings.git_repo}\n\n"
-        "Your response should be markdown. On the files section, only reference custom files unique to this project. Do not include files that can be included through packages or cdns."
-    )
-    readme, raw_response = query_llm_with_retry(system_prompt, user_prompt, model=settings.model)
-    save_file(settings.build_path, "README.md", readme)
-    if settings.log_file:
-        log_generation(settings.log_file, "README.md", raw_response)
-    return readme
-
-def generate_files(settings, readme):
-    """
-    Generates a list of files to be created based on the README content.
-    """
-    print("Extracting file list from README.md")
-    system_prompt = (
-        "Given an unstructured README that lists files associated with a project, "
-        "output the list of files in JSON format that fits a Python `List[str]`. "
-        "Your output should be in a markdown code block with ```json."
-    )
-    user_prompt = (
-        f"Extract the files in this project from the following README:\n"
-        "```markdown\n"
-        f"{readme}\n"
-        "```\n\n"
-        "Skip binary files; this should be a list of text, code, or markup files. "
-        "Do not include folder paths, just the files with their full path."
-    )
-    files, raw_response = query_llm_with_retry(
-        system_prompt,
-        user_prompt,
-        format='json',
-        model=settings.model
-    )
-    if settings.log_file:
-        log_generation(settings.log_file, "File List", raw_response)
-    print("Files to generate:", files)
-    return files
-
-def generate_file(settings, readme, file_name):
-    """
-    Generates the content for a single file based on the README and file name.
-    """
-    print(f"Generating {file_name}")
-    system_prompt = (
-        "You are a skilled AI that specializes in web app creation. "
-        "Generate a file that matches the README description."
-    )
-    user_prompt = (
-        f"Create a file called `{file_name}` that matches the description in this README:\n"
-        "```markdown\n"
-        f"{readme}\n"
-        "```\n\n"
-        "Your response should be a markdown code block containing the file content. "
-        "Ensure the file adheres to the specifications and contains initial code that works."
-    )
-    file_content, raw_response = query_llm_with_retry(
-        system_prompt,
-        user_prompt,
-        format='code',
-        model=settings.model
-    )
-    save_file(settings.build_path, file_name, file_content)
-    if settings.log_file:
-        log_generation(settings.log_file, file_name, raw_response)
-
 def generate_app(settings):
     """
-    Orchestrates the generation of the entire application.
+    Orchestrates the generation of the entire application using AI tools.
     """
-    # Generate and save README.md
-    readme = generate_readme(settings)
-    # Extract file list from README.md
-    file_list = generate_files(settings, readme)
-    # Generate and save each file
+    toolbox = Toolbox()
+    parser = XMLParser(tag="use_tool")
+    formatter = XMLPromptFormatter(tag="use_tool")
+
+    # State management
+    readme_content = None
+    file_list = []
+
+    # Add tools to toolbox
+    def write_readme(content):
+        nonlocal readme_content
+        readme_content = content
+        save_file(settings.build_path, "README.md", content)
+        if settings.log_file:
+            log_generation(settings.log_file, "README.md", content)
+
+    toolbox.add_tool(
+        name="write_readme",
+        fn=write_readme,
+        args={
+            "content": {"type": "string", "description": "Content of the README.md file"}
+        },
+        description="Writes the project README file"
+    )
+
+    def provide_file_list(files):
+        nonlocal file_list
+        file_list = files.split(",")
+
+    toolbox.add_tool(
+        name="provide_file_list",
+        fn=provide_file_list,
+        args={
+            "files": {"type": "string", "description": "List of project files(comma separated)"}
+        },
+        description="Provides the list of files to generate"
+    )
+
+    def write_file(path, content):
+        save_file(settings.build_path, path, content)
+        if settings.log_file:
+            log_generation(settings.log_file, path, content)
+
+    toolbox.add_tool(
+        name="write_file",
+        fn=write_file,
+        args={
+            "path": {"type": "string", "description": "File path"},
+            "content": {"type": "string", "description": "File content"}
+        },
+        description="Writes a file to the project"
+    )
+
+    # Generate README
+    system = (
+        "You are a skilled AI that specializes in web app creation. Generate a README using the write_readme tool.\n"
+        f"Project Specs:\n{yaml.dump(settings.spec)}\n"
+        f"Frontend: {settings.frontend}\nBackend: {settings.backend}\nDatabase: {settings.database}\n"
+        "Include sections: Introduction, Usage, Files, Methods, Models, CSS, JS, Notes.\n"
+    )
+    system += formatter.usage_prompt(toolbox)
+    
+    user = "Create a comprehensive README.md for the described application."
+    response_text = query_llm_with_retry(system, user, model=settings.model)
+    for event in parser.parse(response_text):
+        toolbox.use(event)
+
+    if not readme_content:
+        raise LLMResponseInvalid("README generation failed")
+
+    # Generate file list
+    system = (
+        "Analyze the README and list project files using provide_file_list tool.\n"
+        "Include only text/code files (no binaries or generated files).\n"
+    )
+    system += formatter.usage_prompt(toolbox)
+    
+    user = f"README content:\n{readme_content}\n\nList the project files:"
+    response_text = query_llm_with_retry(system, user, model=settings.model)
+    for event in parser.parse(response_text):
+        toolbox.use(event)
+
+    if not file_list:
+        raise LLMResponseInvalid("File list generation failed")
+
+    # Generate individual files
     for file_name in file_list:
-        generate_file(settings, readme, file_name)
+        system = (
+            f"Generate code for {file_name} using write_file tool.\n"
+            f"Tech stack: {settings.frontend}, {settings.backend}, {settings.database}\n"
+        )
+        system += formatter.usage_prompt(toolbox)
+        print("Generating with", system)
+        print("---")
+        
+        user = f"README:\n{readme_content}\n\nCreate the {file_name} file:"
+        print("User prompt", user)
+        print("+-+")
+        response_text = query_llm_with_retry(system, user, model=settings.model)
+        print("response text", response_text)
+        print("+++")
+        for event in parser.parse(response_text):
+            toolbox.use(event)
 
 def main():
     args = parse_args()
